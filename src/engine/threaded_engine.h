@@ -339,6 +339,10 @@ class ThreadedEngine : public Engine {
       if (profiler_->AggregateEnabled()) {
         attrs.reset(new profiler::ProfileOperator::Attributes());
       }
+      // set size of matrix in push & pull operations
+      if (threaded_opr->prop == FnProperty::kPushPull) {
+        // todo: find a way to smuggle in attributes
+      }
       const Context& ctx = opr_block->ctx;
       opr_block->opr_profile.reset(new profiler::ProfileOperator(threaded_opr->opr_name,
                                                                  attrs.release()));
