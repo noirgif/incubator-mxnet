@@ -87,7 +87,9 @@ enum class FnProperty {
   /*! \brief Asynchronous function call */
   kAsync,
   /*! \brief Delete variable call */
-  kDeleteVar
+  kDeleteVar,
+  /*! \brief Push and pull */
+  kPushPull
 };  // enum class FnProperty
 
 /*!

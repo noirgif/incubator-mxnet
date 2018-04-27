@@ -249,7 +249,7 @@ class KVStoreDist : public KVStoreLocal {
           pinned_ctx_,
           {},
           {recv_buf.var()},
-          FnProperty::kNormal,
+          FnProperty::kPushPull,
           priority,
           "KVStoreDistDefaultStoragePull");
 
@@ -393,7 +393,7 @@ class KVStoreDist : public KVStoreLocal {
       pinned_ctx_,
       {small_buf.var(), comm_buf.var()},
       {},
-      FnProperty::kNormal,
+      FnProperty::kPushPull,
       priority,
       "KVStoreDistCompressedPush");
   }
@@ -412,7 +412,7 @@ class KVStoreDist : public KVStoreLocal {
               pskv.keys, vals, pskv.lens,
               cmd, [cb]() { cb(); 
               // todo: add turning off profiler to the callback function
-              // not now, try using the extant toggles first
+              // not now, try using the extant triggers first
               });
         };
     Engine::Get()->PushAsync(
@@ -420,7 +420,7 @@ class KVStoreDist : public KVStoreLocal {
         pinned_ctx_,
         {send_buf.var()},
         {},
-        FnProperty::kNormal,
+        FnProperty::kPushPull,
         priority,
         "KVStoreDistDefaultPush");
   }
@@ -452,7 +452,7 @@ class KVStoreDist : public KVStoreLocal {
         pinned_ctx_,
         {send_buf.var()},
         {},
-        FnProperty::kNormal,
+        FnProperty::kPushPull,
         priority,
         "KVStoreDistRowSparsePush");
   }
@@ -499,7 +499,7 @@ class KVStoreDist : public KVStoreLocal {
       pinned_ctx_,
       {indices.var()},
       {recv_buf.var()},
-      FnProperty::kNormal,
+      FnProperty::kPushPull,
       priority,
       "KVStoreDistRowSparsePull");
   }

@@ -326,7 +326,9 @@ void ThreadedEngine::PushAsync(AsyncFn fn, Context exec_ctx,
   BulkFlush();
   ThreadedOpr *opr = NewOperator(std::move(fn), const_vars, mutable_vars, prop, opr_name, wait);
   opr->temporary = true;
-  const bool profiling = profiler_->IsProfiling(profiler::Profiler::kImperative);
+  // plug in push and pull
+  const bool profiling = profiler_->IsProfiling(profiler::Profiler::kImperative)
+    || (prop == FnProperty::kPushPull && profiler_->IsProfiling(profiler::Profiler::kPushPull));
   Push(opr, exec_ctx, priority, profiling);
 }
 
