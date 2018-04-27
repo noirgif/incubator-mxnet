@@ -410,7 +410,10 @@ class KVStoreDist : public KVStoreLocal {
           int cmd = GetCommandType(RequestType::kDefaultPushPull, dtype);
           CHECK_NOTNULL(ps_worker_)->ZPush(
               pskv.keys, vals, pskv.lens,
-              cmd, [cb]() { cb(); });
+              cmd, [cb]() { cb(); 
+              // todo: add turning off profiler to the callback function
+              // not now, try using the extant toggles first
+              });
         };
     Engine::Get()->PushAsync(
         push_to_servers,

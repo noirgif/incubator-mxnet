@@ -259,7 +259,8 @@ class Profiler {
       kSymbolic = 1,
       kImperative = 2,
       kAPI = 4,
-      kMemory = 8
+      kMemory = 8,
+      kPushPull = 16
   };
   enum ProfilerState {
       kNotRunning = 0,

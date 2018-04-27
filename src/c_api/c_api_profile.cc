@@ -199,6 +199,10 @@ struct ProfileConfigParam : public dmlc::Parameter<ProfileConfigParam> {
   bool profile_imperative;
   bool profile_memory;
   bool profile_api;
+
+  // whether profile push and pull
+  bool profile_pp;
+
   std::string filename;
   bool continuous_dump;
   float dump_period;
@@ -214,6 +218,9 @@ struct ProfileConfigParam : public dmlc::Parameter<ProfileConfigParam> {
       .describe("Profile memory.");
     DMLC_DECLARE_FIELD(profile_api).set_default(false)
       .describe("Profile C API.");
+    // declare profiling push pull option
+    DMLC_DECLARE_FIELD(profile_pp).set_default(false)
+      .describe("Profile KVPush and KVPull")
     DMLC_DECLARE_FIELD(filename).set_default("profile.json")
       .describe("File name to write profiling info.");
     DMLC_DECLARE_FIELD(continuous_dump).set_default(true)
@@ -261,6 +268,8 @@ int MXSetProfilerConfig(int num_params, const char* const* keys, const char* con
     if (param.profile_symbolic || param.profile_all)   { mode |= profiler::Profiler::kSymbolic; }
     if (param.profile_imperative || param.profile_all) { mode |= profiler::Profiler::kImperative; }
     if (param.profile_memory || param.profile_all)     { mode |= profiler::Profiler::kMemory; }
+    if (param.profile_pp || param.profile_all)         { mode |= profiler::Profiler::kPushPull; }
+
     profiler::Profiler::Get()->SetConfig(profiler::Profiler::ProfilerMode(mode),
                                          std::string(param.filename),
                                          param.continuous_dump,
