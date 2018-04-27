@@ -206,13 +206,13 @@ struct ProfileConfigParam : public dmlc::Parameter<ProfileConfigParam> {
   DMLC_DECLARE_PARAMETER(ProfileConfigParam) {
     DMLC_DECLARE_FIELD(profile_all).set_default(false)
       .describe("Profile all.");
-    DMLC_DECLARE_FIELD(profile_symbolic).set_default(true)
+    DMLC_DECLARE_FIELD(profile_symbolic).set_default(false)
       .describe("Profile symbolic operators.");
-    DMLC_DECLARE_FIELD(profile_imperative).set_default(true)
+    DMLC_DECLARE_FIELD(profile_imperative).set_default(false)
       .describe("Profile imperative operators.");
-    DMLC_DECLARE_FIELD(profile_memory).set_default(true)
+    DMLC_DECLARE_FIELD(profile_memory).set_default(false)
       .describe("Profile memory.");
-    DMLC_DECLARE_FIELD(profile_api).set_default(true)
+    DMLC_DECLARE_FIELD(profile_api).set_default(false)
       .describe("Profile C API.");
     DMLC_DECLARE_FIELD(filename).set_default("profile.json")
       .describe("File name to write profiling info.");
