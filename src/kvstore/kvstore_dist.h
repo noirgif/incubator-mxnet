@@ -32,6 +32,7 @@
 #include "mxnet/engine.h"
 #include "ps/ps.h"
 #include "./kvstore_dist_server.h"
+#include "../profiler/profiler.h"
 namespace mxnet {
 namespace kvstore {
 
@@ -408,12 +409,26 @@ class KVStoreDist : public KVStoreLocal {
           // do push. false means no delete
           ps::SArray<char> vals(data, size, false);
           int cmd = GetCommandType(RequestType::kDefaultPushPull, dtype);
-          CHECK_NOTNULL(ps_worker_)->ZPush(
+          if (profiler::Profiler::get()->IsProfiling(profiler::Profiler::kPushPull))
+          {
+            std::unique_ptr<profiler::ProfileOperator::Attributes> attrs(new profiler::ProfileOperator::Attributes());
+            attrs->inputs.push_back(send_buf.shape);
+            attrs->attr_["size"] = size;
+            std::unique<profiler::ProfilerOperator> profiler_(new profiler::ProfilerOperator("KVStoreDistDefaultPush_inner", attrs.release()));
+            profiler_->start(1, 1);
+            CHECK_NOTNULL(ps_worker_)->ZPush(
               pskv.keys, vals, pskv.lens,
-              cmd, [cb]() { cb(); 
+              cmd, [cb, &profiler_]() { cb(); 
               // todo: add turning off profiler to the callback function
-              // not now, try using the extant triggers first
-              });
+              profiler_->stop();
+            });
+          }
+          else
+          {
+            CHECK_NOTNULL(ps_worker_)->ZPush(
+              pskv.keys, vals, pskv.lens,
+              cmd, [cb]() { cb(); });
+          }
         };
     Engine::Get()->PushAsync(
         push_to_servers,
