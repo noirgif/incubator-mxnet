@@ -220,7 +220,7 @@ struct ProfileConfigParam : public dmlc::Parameter<ProfileConfigParam> {
       .describe("Profile C API.");
     // declare profiling push pull option
     DMLC_DECLARE_FIELD(profile_pp).set_default(false)
-      .describe("Profile KVPush and KVPull")
+      .describe("Profile KVPush and KVPull");
     DMLC_DECLARE_FIELD(filename).set_default("profile.json")
       .describe("File name to write profiling info.");
     DMLC_DECLARE_FIELD(continuous_dump).set_default(true)
