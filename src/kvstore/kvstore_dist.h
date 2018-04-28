@@ -409,13 +409,13 @@ class KVStoreDist : public KVStoreLocal {
           // do push. false means no delete
           ps::SArray<char> vals(data, size, false);
           int cmd = GetCommandType(RequestType::kDefaultPushPull, dtype);
-          if (profiler::Profiler::get()->IsProfiling(profiler::Profiler::kPushPull))
+          if (profiler::Profiler::Get()->IsProfiling(profiler::Profiler::kPushPull))
           {
             std::unique_ptr<profiler::ProfileOperator::Attributes> attrs(new profiler::ProfileOperator::Attributes());
-            attrs->inputs.push_back(send_buf.shape);
+            attrs->inputs_.push_back(send_buf.shape());
             attrs->attr_["size"] = size;
-            std::unique<profiler::ProfilerOperator> profiler_(new profiler::ProfilerOperator("KVStoreDistDefaultPush_inner", attrs.release()));
-            profiler_->start(1, 1);
+            std::unique_ptr<profiler::ProfileOperator> profiler_(new profiler::ProfileOperator("KVStoreDistDefaultPush_inner", attrs.release()));
+            profiler_->start(Context::kCPU, 1);
             CHECK_NOTNULL(ps_worker_)->ZPush(
               pskv.keys, vals, pskv.lens,
               cmd, [cb, &profiler_]() { cb(); 
