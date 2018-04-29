@@ -241,8 +241,26 @@ class KVStoreDist : public KVStoreLocal {
         RequestType mode = (gradient_compression_->get_type() != CompressionType::kNone) ?
                   RequestType::kCompressedPushPull : RequestType::kDefaultPushPull;
         const int cmd = GetCommandType(mode, dtype);
-        CHECK_NOTNULL(ps_worker_)->ZPull(
-          pskv.keys, vals, &pskv.lens, cmd, [vals, cb](){ delete vals; cb(); });
+        if (profiler::Profiler::Get()->IsProfiling(profiler::Profiler::kPushPull))
+        {
+          std::unique_ptr<profiler::ProfileOperator::Attributes> attrs(new profiler::ProfileOperator::Attributes());
+          attrs->inputs_.push_back(send_buf.shape());
+          attrs->attr_["size"] = std::to_string(size);
+          std::shared_ptr<profiler::ProfileOperator> profiler_(new profiler::ProfileOperator("KVStoreDistDefaultPull_inner ", attrs.release()));
+          profiler_->start(Context::kCPU, 1);
+          CHECK_NOTNULL(ps_worker_)->ZPull(
+            pskv.keys, vals, &pskv.lens,
+            cmd, [vals, cb, profiler_]() { delete vals; cb(); 
+            // todo: add turning off profiler to the callback function
+            profiler_->stop();
+          });
+        }
+        else
+        {
+          CHECK_NOTNULL(ps_worker_)->ZPull(
+            pskv.keys, vals, &pskv.lens, cmd, [vals, cb](){ delete vals; cb(); });
+        }
+        
       };
 
       CHECK_NOTNULL(Engine::Get())->PushAsync(
@@ -414,7 +432,7 @@ class KVStoreDist : public KVStoreLocal {
             std::unique_ptr<profiler::ProfileOperator::Attributes> attrs(new profiler::ProfileOperator::Attributes());
             attrs->inputs_.push_back(send_buf.shape());
             attrs->attr_["size"] = std::to_string(size);
-            std::shared_ptr<profiler::ProfileOperator> profiler_(new profiler::ProfileOperator("KVStoreDistDefaultPush_inner", attrs.release()));
+            std::shared_ptr<profiler::ProfileOperator> profiler_(new profiler::ProfileOperator("KVStoreDistDefaultPush_inner ", attrs.release()));
             profiler_->start(Context::kCPU, 1);
             CHECK_NOTNULL(ps_worker_)->ZPush(
               pskv.keys, vals, pskv.lens,
@@ -460,7 +478,26 @@ class KVStoreDist : public KVStoreLocal {
       }
       ps::SArray<char> vals(data, size * num_bytes, false);
       const int cmd = GetCommandType(RequestType::kRowSparsePushPull, send_buf.dtype());
-      CHECK_NOTNULL(ps_worker_)->ZPush(pskv.keys, vals, pskv.lens, cmd, [cb]() { cb(); });
+      if (profiler::Profiler::Get()->IsProfiling(profiler::Profiler::kPushPull))
+      {
+        std::unique_ptr<profiler::ProfileOperator::Attributes> attrs(new profiler::ProfileOperator::Attributes());
+        attrs->inputs_.push_back(send_buf.shape());
+        attrs->attr_["size"] = std::to_string(size);
+        std::shared_ptr<profiler::ProfileOperator> profiler_(new profiler::ProfileOperator("KVStoreDistRowSparsePush_inner ", attrs.release()));
+        profiler_->start(Context::kCPU, 1);
+        CHECK_NOTNULL(ps_worker_)->ZPush(
+          pskv.keys, vals, pskv.lens,
+          cmd, [cb, profiler_]() { cb(); 
+          // todo: add turning off profiler to the callback function
+          profiler_->stop();
+        });
+      }
+      else
+      {
+        CHECK_NOTNULL(ps_worker_)->ZPush(
+          pskv.keys, vals, pskv.lens,
+          cmd, [cb]() { cb(); });
+      }
     };
     Engine::Get()->PushAsync(
         push_to_servers,
