@@ -413,7 +413,7 @@ class KVStoreDist : public KVStoreLocal {
           {
             std::unique_ptr<profiler::ProfileOperator::Attributes> attrs(new profiler::ProfileOperator::Attributes());
             attrs->inputs_.push_back(send_buf.shape());
-            attrs->attr_["size"] = size;
+            attrs->attr_["size"] = std::to_string(size);
             std::shared_ptr<profiler::ProfileOperator> profiler_(new profiler::ProfileOperator("KVStoreDistDefaultPush_inner", attrs.release()));
             profiler_->start(Context::kCPU, 1);
             CHECK_NOTNULL(ps_worker_)->ZPush(
