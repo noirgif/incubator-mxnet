@@ -263,7 +263,7 @@ class KVStoreDist : public KVStoreLocal {
         
       };
 
-      CHECK_NOTNULL(Engine::Get())->PushAsync(
+      /*CHECK_NOTNULL(Engine::Get())->PushAsync(
           pull_from_servers,
           pinned_ctx_,
           {},
@@ -271,7 +271,7 @@ class KVStoreDist : public KVStoreLocal {
           FnProperty::kPushPull,
           priority,
           "KVStoreDistDefaultStoragePull");
-
+      */
       comm_->Broadcast(key, recv_buf, grouped_vals[i], priority);
     }
   }
