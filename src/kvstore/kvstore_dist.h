@@ -448,14 +448,14 @@ class KVStoreDist : public KVStoreLocal {
               cmd, [cb]() { cb(); });
           }
         };
-    Engine::Get()->PushAsync(
+    /*Engine::Get()->PushAsync(
         push_to_servers,
         pinned_ctx_,
         {send_buf.var()},
         {},
         FnProperty::kPushPull,
         priority,
-        "KVStoreDistDefaultPush");
+        "KVStoreDistDefaultPush"); */
   }
 
   // push row sparse gradient
