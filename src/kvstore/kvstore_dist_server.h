@@ -441,6 +441,7 @@ class KVStoreDistServer {
     auto num_rows = req_data.keys.size() - 1;
     auto& stored = store_[master_key];
     if (req_meta.push) {
+      /*
       CHECK_GT(req_data.lens.size(), 0) << "req_data.lens cannot be empty";
       CHECK_EQ(req_data.lens[0], 0);
       if (stored.is_none()) {
@@ -511,6 +512,7 @@ class KVStoreDistServer {
           ApplyUpdates(type, master_key, &updates, server);
         }
       }
+      */
     } else {
       // pull
       RowSparsePullResponse(type, master_key, num_rows, req_meta, req_data, server);
@@ -533,7 +535,7 @@ class KVStoreDistServer {
     response.keys = req_data.keys;
     response.lens = {len};
     // TODO(mli) try to remove this CopyFrom
-    response.vals.CopyFrom(static_cast<const char*>(stored.data().dptr_), len);
+    //response.vals.CopyFrom(static_cast<const char*>(stored.data().dptr_), len);
     server->Response(req_meta, response);
   }
 
@@ -621,6 +623,7 @@ class KVStoreDistServer {
     // could be deallocated when this function returns. so we need to make sure
     // the operators with \a NDArray are actually finished
     if (req_meta.push) {
+      /*
       size_t ds[] = {(size_t) req_data.lens[0] / mshadow::mshadow_sizeof(type.dtype)};
       TShape dshape(ds, ds + 1);
       TBlob recv_blob;
@@ -672,7 +675,8 @@ class KVStoreDistServer {
         updates.request.push_back(req_meta);
         ApplyUpdates(type, key, &updates, server);
       }
-    } else {
+      */
+    } else { // pull
       DefaultStorageResponse(type, key, req_meta, req_data, server);
     }
   }
