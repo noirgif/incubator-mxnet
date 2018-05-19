@@ -441,7 +441,7 @@ class KVStoreDistServer {
     auto num_rows = req_data.keys.size() - 1;
     auto& stored = store_[master_key];
     if (req_meta.push) {
-      /*
+      
       CHECK_GT(req_data.lens.size(), 0) << "req_data.lens cannot be empty";
       CHECK_EQ(req_data.lens[0], 0);
       if (stored.is_none()) {
@@ -452,6 +452,7 @@ class KVStoreDistServer {
         return;
       } else {
         if (log_verbose_) LOG(INFO) << "push: " << master_key << " " << req_data.keys;
+        /*
         auto& updates = update_buf_[master_key];
         if (sync_mode_ && updates.merged.is_none()) {
           updates.merged = NDArray(kRowSparseStorage, stored.shape(), Context(), true,
@@ -461,9 +462,10 @@ class KVStoreDistServer {
           updates.temp_array = NDArray(kRowSparseStorage, stored.shape(), Context(), false,
                                        mshadow::kFloat32);
         }
-
+        */
         if (num_rows == 0) {
           if (sync_mode_) {
+            /*
             if (updates.request.empty()) {
               // reset to zeros
               int merged_dtype = has_multi_precision_copy(type) ? mshadow::kFloat32 : type.dtype;
@@ -472,10 +474,12 @@ class KVStoreDistServer {
             }  // else nothing to aggregate
             updates.request.push_back(req_meta);
             ApplyUpdates(type, master_key, &updates, server);
+            */
           } else {
             server->Response(req_meta);
           }
         } else {
+          /*
           auto unit_len = req_data.lens[1] / mshadow::mshadow_sizeof(type.dtype);
           CHECK_GT(unit_len, 0);
           // indices
@@ -510,9 +514,10 @@ class KVStoreDistServer {
           }
           updates.request.push_back(req_meta);
           ApplyUpdates(type, master_key, &updates, server);
+          // */
         }
       }
-      */
+      // */
     } else {
       // pull
       RowSparsePullResponse(type, master_key, num_rows, req_meta, req_data, server);
@@ -623,20 +628,26 @@ class KVStoreDistServer {
     // could be deallocated when this function returns. so we need to make sure
     // the operators with \a NDArray are actually finished
     if (req_meta.push) {
-      /*
+      
       size_t ds[] = {(size_t) req_data.lens[0] / mshadow::mshadow_sizeof(type.dtype)};
       TShape dshape(ds, ds + 1);
+      /*
       TBlob recv_blob;
       MSHADOW_REAL_TYPE_SWITCH(type.dtype, DType, {
         recv_blob = TBlob(reinterpret_cast<DType*>(req_data.vals.data()), dshape, cpu::kDevMask);
       })
       NDArray recved = NDArray(recv_blob, 0);
+      // */
       if (stored.is_none()) {
         // initialization
+        
         stored = NDArray(dshape, Context(), false,
                          has_multi_precision_copy(type) ? mshadow::kFloat32 : type.dtype);
+        /*
         CopyFromTo(recved, &stored, 0);
+        // */
         server->Response(req_meta);
+        /*
         if (has_multi_precision_copy(type)) {
           auto& stored_dtype = store_[key];
           stored_dtype = NDArray(dshape, Context(), false, type.dtype);
@@ -644,7 +655,9 @@ class KVStoreDistServer {
           stored_dtype.WaitToRead();
         }
         stored.WaitToRead();
+        */
       } else {
+        /*
         auto &updates = update_buf_[key];
         if (sync_mode_ && updates.merged.is_none()) {
           updates.merged = NDArray(dshape, Context(), false,
@@ -674,8 +687,8 @@ class KVStoreDistServer {
         }
         updates.request.push_back(req_meta);
         ApplyUpdates(type, key, &updates, server);
+        */
       }
-      */
     } else { // pull
       DefaultStorageResponse(type, key, req_meta, req_data, server);
     }
