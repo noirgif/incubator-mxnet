@@ -283,8 +283,10 @@ class KVStoreDistServer {
                            UpdateBuf *update_buf, ps::KVServer<char>* server) {
     if (!sync_mode_ || update_buf->request.size() == (size_t) ps::NumWorkers()) {
       // let the main thread to execute updater_, which is necessary for python
+      /*
       auto& stored = has_multi_precision_copy(type) ? store_realt_[key] : store_[key];
       auto& update =  sync_mode_ ? update_buf->merged : update_buf->temp_array;
+      
       if (updater_) {
         exec_.Exec([this, key, &update, &stored](){
           CHECK(updater_);
@@ -299,14 +301,17 @@ class KVStoreDistServer {
       if (log_verbose_)  {
         LOG(INFO) << "sent response to " << update_buf->request.size() << " workers";
       }
+      */
       for (const auto& req : update_buf->request) {
         server->Response(req);
       }
       update_buf->request.clear();
+      /*
       if (has_multi_precision_copy(type)) CopyFromTo(stored, store_[key]);
       stored.WaitToRead();
+      */
     } else {
-      update_buf->merged.WaitToRead();
+      // update_buf->merged.WaitToRead();
     }
   }
 
@@ -452,8 +457,9 @@ class KVStoreDistServer {
         return;
       } else {
         if (log_verbose_) LOG(INFO) << "push: " << master_key << " " << req_data.keys;
-        /*
+        
         auto& updates = update_buf_[master_key];
+        /*
         if (sync_mode_ && updates.merged.is_none()) {
           updates.merged = NDArray(kRowSparseStorage, stored.shape(), Context(), true,
                                    has_multi_precision_copy(type) ? mshadow::kFloat32 : type.dtype);
@@ -472,9 +478,9 @@ class KVStoreDistServer {
               updates.merged = NDArray(kRowSparseStorage, stored.shape(), Context(),
                                        true, merged_dtype);
             }  // else nothing to aggregate
+            */
             updates.request.push_back(req_meta);
             ApplyUpdates(type, master_key, &updates, server);
-            */
           } else {
             server->Response(req_meta);
           }
@@ -512,6 +518,7 @@ class KVStoreDistServer {
             CHECK(sync_mode_);
             AccumulateRowSparseGrads(type, recved, &updates);
           }
+          // */
           updates.request.push_back(req_meta);
           ApplyUpdates(type, master_key, &updates, server);
           // */
@@ -658,8 +665,8 @@ class KVStoreDistServer {
         stored.WaitToRead();
         */
       } else {
-        /*
         auto &updates = update_buf_[key];
+        /*
         if (sync_mode_ && updates.merged.is_none()) {
           updates.merged = NDArray(dshape, Context(), false,
                                    has_multi_precision_copy(type) ? mshadow::kFloat32 : type.dtype);
@@ -686,9 +693,10 @@ class KVStoreDistServer {
             updates.merged += recved;
           }
         }
+        // */
         updates.request.push_back(req_meta);
         ApplyUpdates(type, key, &updates, server);
-        */
+        // */
       }
     } else { // pull
       DefaultStorageResponse(type, key, req_meta, req_data, server);
