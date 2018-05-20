@@ -540,7 +540,8 @@ class KVStoreDistServer {
     response.keys = req_data.keys;
     response.lens = {len};
     // TODO(mli) try to remove this CopyFrom
-    //response.vals.CopyFrom(static_cast<const char*>(stored.data().dptr_), len);
+    // response.vals.CopyFrom(static_cast<const char*>(stored.data().dptr_), len);
+    response.vals = ps::SArray<char>(len);
     server->Response(req_meta, response);
   }
 
