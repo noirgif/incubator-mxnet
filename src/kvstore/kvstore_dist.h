@@ -276,8 +276,8 @@ class KVStoreDist : public KVStoreLocal {
           "KVStoreDistDefaultStoragePull");
 
       comm_->Broadcast(key, recv_buf, grouped_vals[i], priority);
-      */
     }
+    */
   }
 
   void PullRowSparseImpl(const std::vector<int>& keys,
