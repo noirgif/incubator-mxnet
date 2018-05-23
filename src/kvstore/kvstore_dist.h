@@ -262,6 +262,7 @@ class KVStoreDist : public KVStoreLocal {
             pskv.keys, vals, &pskv.lens, cmd, [vals, cb](){ delete vals; cb(); });
         }
         */
+        cb();
       };
 
       CHECK_NOTNULL(Engine::Get())->PushAsync(
@@ -404,6 +405,7 @@ class KVStoreDist : public KVStoreLocal {
         ps::SArray<char> vals(data, size, false);
         int cmd = GetCommandType(RequestType::kCompressedPushPull, dtype);
         // CHECK_NOTNULL(ps_worker_)->ZPush(pskv.keys, vals, pskv.lens, cmd, [cb]() { cb(); });
+        cb();
       };
     // acquire locks on both comm_buf and small_buf so that
     // pull (which uses comm_buf) for the same key waits till push finishes
@@ -449,6 +451,7 @@ class KVStoreDist : public KVStoreLocal {
               cmd, [cb]() { cb(); });
           }
           */
+          cb();
         };
     Engine::Get()->PushAsync(
         push_to_servers,
@@ -502,6 +505,7 @@ class KVStoreDist : public KVStoreLocal {
           cmd, [cb]() { cb(); });
       }
       */
+      cb();
     };
     Engine::Get()->PushAsync(
         push_to_servers,
