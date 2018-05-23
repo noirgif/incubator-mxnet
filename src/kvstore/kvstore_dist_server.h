@@ -570,11 +570,11 @@ class KVStoreDistServer {
 
       //int original_size = DecodeKey(req_data.keys[0]);
       int key = DecodeKey(req_data.keys[1]);
-      /*auto& stored = store_[key];
-
+      auto& stored = store_[key];
+      /*
       size_t ds[] = {(size_t)req_data.lens[1] / mshadow::mshadow_sizeof(type.dtype)};
       TShape dshape(ds, ds + 1);
-      /*
+      
       TBlob recv_blob(reinterpret_cast<real_t*>(req_data.vals.data()), dshape, cpu::kDevMask);
       NDArray recved = NDArray(recv_blob, 0);
 
@@ -637,7 +637,7 @@ class KVStoreDistServer {
       CHECK_EQ(req_data.vals.size(), (size_t)req_data.lens[0]);
     }
     int key = DecodeKey(req_data.keys[0]);
-    // auto& stored = has_multi_precision_copy(type) ? store_realt_[key] : store_[key];
+    auto& stored = has_multi_precision_copy(type) ? store_realt_[key] : store_[key];
     // there used several WaitToRead, this is because \a recved's memory
     // could be deallocated when this function returns. so we need to make sure
     // the operators with \a NDArray are actually finished
