@@ -568,12 +568,13 @@ class KVStoreDistServer {
       CHECK_EQ(req_data.lens.size(), (size_t)2);
       CHECK_EQ(req_data.vals.size(), (size_t)req_data.lens[1]);
 
-      int original_size = DecodeKey(req_data.keys[0]);
+      //int original_size = DecodeKey(req_data.keys[0]);
       int key = DecodeKey(req_data.keys[1]);
-      auto& stored = store_[key];
+      /*auto& stored = store_[key];
 
       size_t ds[] = {(size_t)req_data.lens[1] / mshadow::mshadow_sizeof(type.dtype)};
       TShape dshape(ds, ds + 1);
+      /*
       TBlob recv_blob(reinterpret_cast<real_t*>(req_data.vals.data()), dshape, cpu::kDevMask);
       NDArray recved = NDArray(recv_blob, 0);
 
@@ -583,15 +584,17 @@ class KVStoreDistServer {
       if (decomp_buf.is_none()) {
         decomp_buf = NDArray(dshape, Context());
       }
-
+      */
       if (stored.is_none()) {
+        /*
         stored = NDArray(dshape, Context());
-        gradient_compression_->Dequantize(recved, &stored, 0);
+        gradient_compression_->Dequantize(recved, &stored, 0);*/
         server->Response(req_meta);
-        stored.WaitToRead();
+        // stored.WaitToRead();
       } else if (sync_mode_) {
         // synced push
         auto& merged = update_buf_[key];
+        /*
         if (merged.merged.is_none()) {
           merged.merged = NDArray(dshape, Context());
         }
@@ -601,17 +604,20 @@ class KVStoreDistServer {
           gradient_compression_->Dequantize(recved, &decomp_buf, 0);
           merged.merged += decomp_buf;
         }
+        */
         merged.request.push_back(req_meta);
         ApplyUpdates(type, key, &merged, server);
       } else {
         // async push
+        /*
         gradient_compression_->Dequantize(recved, &decomp_buf, 0);
         exec_.Exec([this, key, &decomp_buf, &stored]() {
           CHECK(updater_);
           updater_(key, decomp_buf, &stored);
         });
+        */
         server->Response(req_meta);
-        stored.WaitToRead();
+        // stored.WaitToRead();
       }
     } else {       // pull
       CHECK_EQ(req_data.keys.size(), (size_t)1);
@@ -631,12 +637,12 @@ class KVStoreDistServer {
       CHECK_EQ(req_data.vals.size(), (size_t)req_data.lens[0]);
     }
     int key = DecodeKey(req_data.keys[0]);
-    auto& stored = has_multi_precision_copy(type) ? store_realt_[key] : store_[key];
+    // auto& stored = has_multi_precision_copy(type) ? store_realt_[key] : store_[key];
     // there used several WaitToRead, this is because \a recved's memory
     // could be deallocated when this function returns. so we need to make sure
     // the operators with \a NDArray are actually finished
     if (req_meta.push) {
-      
+      /*
       size_t ds[] = {(size_t) req_data.lens[0] / mshadow::mshadow_sizeof(type.dtype)};
       TShape dshape(ds, ds + 1);
       /*
@@ -649,7 +655,7 @@ class KVStoreDistServer {
       if (stored.is_none()) {
         // initialization
         
-        stored = NDArray(dshape, Context(), false,
+        /* stored = NDArray(dshape, Context(), false,
                          has_multi_precision_copy(type) ? mshadow::kFloat32 : type.dtype);
         /*
         CopyFromTo(recved, &stored, 0);
