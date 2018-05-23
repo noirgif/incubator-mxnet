@@ -241,6 +241,7 @@ class KVStoreDist : public KVStoreLocal {
         RequestType mode = (gradient_compression_->get_type() != CompressionType::kNone) ?
                   RequestType::kCompressedPushPull : RequestType::kDefaultPushPull;
         const int cmd = GetCommandType(mode, dtype);
+        /*
         if (profiler::Profiler::Get()->IsProfiling(profiler::Profiler::kPushPull))
         {
           std::unique_ptr<profiler::ProfileOperator::Attributes> attrs(new profiler::ProfileOperator::Attributes());
@@ -260,10 +261,10 @@ class KVStoreDist : public KVStoreLocal {
           CHECK_NOTNULL(ps_worker_)->ZPull(
             pskv.keys, vals, &pskv.lens, cmd, [vals, cb](){ delete vals; cb(); });
         }
-        
+        */
       };
 
-      /*CHECK_NOTNULL(Engine::Get())->PushAsync(
+      CHECK_NOTNULL(Engine::Get())->PushAsync(
           pull_from_servers,
           pinned_ctx_,
           {},
@@ -271,7 +272,6 @@ class KVStoreDist : public KVStoreLocal {
           FnProperty::kPushPull,
           priority,
           "KVStoreDistDefaultStoragePull");
-      */
       comm_->Broadcast(key, recv_buf, grouped_vals[i], priority);
     }
   }
@@ -403,7 +403,7 @@ class KVStoreDist : public KVStoreLocal {
         // do push. false means no delete
         ps::SArray<char> vals(data, size, false);
         int cmd = GetCommandType(RequestType::kCompressedPushPull, dtype);
-        CHECK_NOTNULL(ps_worker_)->ZPush(pskv.keys, vals, pskv.lens, cmd, [cb]() { cb(); });
+        // CHECK_NOTNULL(ps_worker_)->ZPush(pskv.keys, vals, pskv.lens, cmd, [cb]() { cb(); });
       };
     // acquire locks on both comm_buf and small_buf so that
     // pull (which uses comm_buf) for the same key waits till push finishes
@@ -427,6 +427,7 @@ class KVStoreDist : public KVStoreLocal {
           // do push. false means no delete
           ps::SArray<char> vals(data, size, false);
           int cmd = GetCommandType(RequestType::kDefaultPushPull, dtype);
+          /*
           if (profiler::Profiler::Get()->IsProfiling(profiler::Profiler::kPushPull))
           {
             std::unique_ptr<profiler::ProfileOperator::Attributes> attrs(new profiler::ProfileOperator::Attributes());
@@ -447,15 +448,16 @@ class KVStoreDist : public KVStoreLocal {
               pskv.keys, vals, pskv.lens,
               cmd, [cb]() { cb(); });
           }
+          */
         };
-    /*Engine::Get()->PushAsync(
+    Engine::Get()->PushAsync(
         push_to_servers,
         pinned_ctx_,
         {send_buf.var()},
         {},
         FnProperty::kPushPull,
         priority,
-        "KVStoreDistDefaultPush"); */
+        "KVStoreDistDefaultPush"); 
   }
 
   // push row sparse gradient
@@ -478,6 +480,7 @@ class KVStoreDist : public KVStoreLocal {
       }
       ps::SArray<char> vals(data, size * num_bytes, false);
       const int cmd = GetCommandType(RequestType::kRowSparsePushPull, send_buf.dtype());
+      /*
       if (profiler::Profiler::Get()->IsProfiling(profiler::Profiler::kPushPull))
       {
         std::unique_ptr<profiler::ProfileOperator::Attributes> attrs(new profiler::ProfileOperator::Attributes());
@@ -498,6 +501,7 @@ class KVStoreDist : public KVStoreLocal {
           pskv.keys, vals, pskv.lens,
           cmd, [cb]() { cb(); });
       }
+      */
     };
     Engine::Get()->PushAsync(
         push_to_servers,
@@ -542,9 +546,11 @@ class KVStoreDist : public KVStoreLocal {
       // at this point, later functions may access the indices variable while copy happens
       mshadow::Copy(recv_buf.aux_data(kIdx).FlatTo1D<cpu, int64_t>(),
                     idx_data.FlatTo1D<cpu, int64_t>());
+                    /*
       CHECK_NOTNULL(ps_worker_)->ZPull(pskv.keys, vals, &pskv.lens,
                                        cmd,
                                        [vals, cb]() { delete vals; cb(); });
+                                       */
     };
     CHECK_NOTNULL(Engine::Get())->PushAsync(
       pull_from_servers,
