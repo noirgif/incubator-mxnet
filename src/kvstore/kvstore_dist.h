@@ -283,6 +283,7 @@ class KVStoreDist : public KVStoreLocal {
   void PullRowSparseImpl(const std::vector<int>& keys,
                          const std::vector<std::pair<NDArray*, NDArray>>& val_rowids,
                          int priority = 0) override {
+                           /*
     std::vector<int> uniq_keys;
     std::vector<std::vector<std::pair<NDArray*, NDArray>>> grouped_val_rowids;
     GroupKVPairsPullRsp(keys, val_rowids, &uniq_keys, &grouped_val_rowids);
@@ -318,6 +319,7 @@ class KVStoreDist : public KVStoreLocal {
                      grouped_val.begin(), get_val);
       comm_->Broadcast(key, recv_buf, grouped_val, priority);
     }
+    */
   }
 
   void Push_(const std::vector<int>& keys,
