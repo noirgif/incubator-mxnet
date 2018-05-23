@@ -66,11 +66,12 @@ class KVWorker : public SimpleApp {
    * \brief constructor
    *
    * \param app_id the app id, should match with \ref KVServer's id
+   * \param customer_id the customer id which is unique locally
    */
-  explicit KVWorker(int app_id) : SimpleApp() {
+  explicit KVWorker(int app_id, int customer_id) : SimpleApp() {
     using namespace std::placeholders;
     slicer_ = std::bind(&KVWorker<Val>::DefaultSlicer, this, _1, _2, _3);
-    obj_ = new Customer(app_id, std::bind(&KVWorker<Val>::Process, this, _1));
+    obj_ = new Customer(app_id, customer_id, std::bind(&KVWorker<Val>::Process, this, _1));
   }
 
   /** \brief deconstructor */
@@ -278,6 +279,8 @@ struct KVMeta {
   int sender;
   /** \brief the associated timestamp */
   int timestamp;
+  /** \brief the customer id of worker */
+  int customer_id;
 };
 
 /**
@@ -292,7 +295,7 @@ class KVServer : public SimpleApp {
    */
   explicit KVServer(int app_id) : SimpleApp() {
     using namespace std::placeholders;
-    obj_ = new Customer(app_id, std::bind(&KVServer<Val>::Process, this, _1));
+    obj_ = new Customer(app_id, app_id, std::bind(&KVServer<Val>::Process, this, _1));
   }
 
   /** \brief deconstructor */
@@ -360,15 +363,14 @@ struct KVServerDefaultHandle {
 template <typename Val>
 void KVServer<Val>::Process(const Message& msg) {
   if (msg.meta.simple_app) {
-    //fprintf(stdout, "recved simple app msg\n");
     SimpleApp::Process(msg); return;
   }
-  //fprintf(stdout, "not simple app msg\n");
   KVMeta meta;
   meta.cmd       = msg.meta.head;
   meta.push      = msg.meta.push;
   meta.sender    = msg.meta.sender;
   meta.timestamp = msg.meta.timestamp;
+  meta.customer_id = msg.meta.customer_id;
   KVPairs<Val> data;
   int n = msg.data.size();
   if (n) {
@@ -381,7 +383,6 @@ void KVServer<Val>::Process(const Message& msg) {
       CHECK_EQ(data.lens.size(), data.keys.size());
     }
   }
-  //fprintf(stdout, "ready to request\n");
   CHECK(request_handle_);
   request_handle_(meta, data, this);
 }
@@ -389,7 +390,8 @@ void KVServer<Val>::Process(const Message& msg) {
 template <typename Val>
 void KVServer<Val>::Response(const KVMeta& req, const KVPairs<Val>& res) {
   Message msg;
-  msg.meta.customer_id = obj_->id();
+  msg.meta.app_id = obj_->app_id();
+  msg.meta.customer_id = req.customer_id;
   msg.meta.request     = false;
   msg.meta.push        = req.push;
   msg.meta.head        = req.cmd;
@@ -427,7 +429,7 @@ void KVWorker<Val>::DefaultSlicer(
     begin += len;
     pos[i+1] = pos[i] + len;
 
-    // don't send it to severs for empty kv
+    // don't send it to servers for empty kv
     sliced->at(i).first = (len != 0);
   }
   CHECK_EQ(pos[n], send.keys.size());
@@ -482,7 +484,8 @@ void KVWorker<Val>::Send(int timestamp, bool push, int cmd, const KVPairs<Val>& 
     const auto& s = sliced[i];
     if (!s.first) continue;
     Message msg;
-    msg.meta.customer_id = obj_->id();
+    msg.meta.app_id = obj_->app_id();
+    msg.meta.customer_id = obj_->customer_id();
     msg.meta.request     = true;
     msg.meta.push        = push;
     msg.meta.head        = cmd;
@@ -554,15 +557,8 @@ int KVWorker<Val>::Pull_(
 
       // do check
       size_t total_key = 0, total_val = 0;
-      //int mis = 0;
       for (const auto& s : kvs) {
         Range range = FindRange(keys, s.keys.front(), s.keys.back()+1);
-        //fprintf(stdout, "\trange %d, keys %d, s.keys %d\n", range.size(), keys.size(), s.keys.size());
-        //for (size_t i = 0; i < keys.size(); i++) {
-        //  fprintf(stdout, "%x %x\n", keys[i], s.keys[i]);
-        //  if (keys[i] != s.keys[i]) mis = 1;
-        //}
-        //fprintf(stdout, "mis:%d\n", mis);
         CHECK_EQ(range.size(), s.keys.size())
             << "unmatched keys size from one server";
         if (lens) CHECK_EQ(s.lens.size(), s.keys.size());
