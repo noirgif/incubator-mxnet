@@ -642,7 +642,7 @@ class KVStoreDistServer {
     // could be deallocated when this function returns. so we need to make sure
     // the operators with \a NDArray are actually finished
     if (req_meta.push) {
-      /*
+      
       size_t ds[] = {(size_t) req_data.lens[0] / mshadow::mshadow_sizeof(type.dtype)};
       TShape dshape(ds, ds + 1);
       /*
@@ -655,7 +655,7 @@ class KVStoreDistServer {
       if (stored.is_none()) {
         // initialization
         
-        /* stored = NDArray(dshape, Context(), false,
+        stored = NDArray(dshape, Context(), false,
                          has_multi_precision_copy(type) ? mshadow::kFloat32 : type.dtype);
         /*
         CopyFromTo(recved, &stored, 0);
